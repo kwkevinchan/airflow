@@ -57,9 +57,9 @@ x-airflow-common:
   # build: .
   environment:
     &airflow-common-env
-    AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    AIRFLOW__CORE__SQL_ALCHEMY_CONN: mysql+mysqlconnector://airflow:airflow@mysql:3306/airflow
-    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: mysql+mysqlconnector://airflow:m71qPQl1joNS1857ziNurKO5ZfMfZikD@mysql:3306/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+mysql://airflow:m71qPQl1joNS1857ziNurKO5ZfMfZikD@mysql:3306/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: '2J7OGHGRHoE0BPWZDRdt1hRfuh8Zi83S7IKa2HeiKc4='
     # python
@@ -71,59 +71,74 @@ x-airflow-common:
     AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+    AIRFLOW_UID: 50000
   user: "50000:0"
+  volumes:
+  - ./logs/:/opt/airflow/logs
+  - ./dags/:/opt/airflow/dags
+  - ./plugins/:/opt/airflow/plugins
+  - ./airflow.cfg:/opt/airflow/airflow.cfg
+  - ./webserver_config.py:/opt/airflow/webserver_config.py
+
 
 services:
   webserver:
     image: apache/airflow:2.1.3-python3.8
     command: webserver
     environment:
-      AIRFLOW__CORE__SQL_ALCHEMY_CONN: mysql+mysqlconnector://airflow:NRKPzfFcYu29B0TMT0jqwcGCFCoy8gSR@mysql:3306/airflow
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: mysql+mysqlconnector://airflow:m71qPQl1joNS1857ziNurKO5ZfMfZikD@mysql:3306/airflow
     volumes:
-      - ./airflow/airflow.cfg:/opt/airflow/airflow.cfg
-      - ./logs/webserver:/opt/airflow/logs
+      - ./logs/:/opt/airflow/logs
+      - ./airflow.cfg:/opt/airflow/airflow.cfg
+      - ./webserver_config.py:/opt/airflow/webserver_config.py
     networks:
       - traefik_bridge
     labels: 
-      - "traefik.http.routers.airflow-webserver-${USER}.rule=Host(`airflow-traefik.test`)"
+      - "traefik.http.routers.airflow-webserver-${USER}.rule=Host(`${USER}-airflow-webserver-traefik.dev.kuobrothers.com`)"
       - "traefik.http.services.airflow-webserver-${USER}.loadbalancer.server.port=8080"
       - "traefik.enable=true"
-
 
   scheduler:
     image: apache/airflow:2.1.3-python3.8
     command: scheduler
     volumes:
-      - ./airflow/airflow.cfg:/opt/airflow/airflow.cfg
+      - ./logs/:/opt/airflow/logs
       - ./dags/:/opt/airflow/dags
-      - ./logs/scheduler/:/opt/airflow/logs
+      - ./plugins/:/opt/airflow/plugins
+      - ./airflow.cfg:/opt/airflow/airflow.cfg
+      - ./webserver_config.py:/opt/airflow/webserver_config.py
     environment:
       <<: *airflow-common-env
     networks:
       - traefik_bridge
 
-  # worker:
-  #   <<: *airflow-common
-  #   command: celery worker
-  #   healthcheck:
-  #     test:
-  #       - "CMD-SHELL"
-  #       - 'celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
-  #     interval: 10s
-  #     timeout: 10s
-  #     retries: 5
-  #   restart: always
-  #   networks:
-  #     - 
+  worker:
+    image: apache/airflow:2.1.3-python3.8
+    environment:
+      <<: *airflow-common-env
+    user: "50000:0"
+    command: celery worker
+    volumes:
+      - ./logs/:/opt/airflow/logs
+      - ./airflow.cfg:/opt/airflow/airflow.cfg
+      - ./webserver_config.py:/opt/airflow/webserver_config.py
+    networks:
+      - traefik_bridge
   
   workspace:
     image: apache/airflow:2.1.3-python3.8
     environment:
       <<: *airflow-common-env
-    user: "0"
+    user: "50000:0"
     volumes: 
-      - ./:/opt/airflow
+      - ./logs/:/opt/airflow/logs
+      - ./dags/:/opt/airflow/dags
+      - ./plugins/:/opt/airflow/plugins
+      - ./airflow.cfg:/opt/airflow/airflow.cfg
+      - ./webserver_config.py:/opt/airflow/webserver_config.py
     entrypoint: tail -f /dev/null
+    networks:
+      - traefik_bridge
 
   # flower:
   #   <<: *airflow-common
@@ -145,9 +160,9 @@ services:
   mysql:
     image: mysql:5.7
     environment:
-      MYSQL_ROOT_PASSWORD: airflow
+      MYSQL_ROOT_PASSWORD: XxnMYTsUBCAwdyEztE8ygLkbHMitSk9r
       MYSQL_USER: airflow
-      MYSQL_PASSWORD: airflow
+      MYSQL_PASSWORD: m71qPQl1joNS1857ziNurKO5ZfMfZikD
       MYSQL_DATABASE: airflow
     volumes:
       - ./data/mysql/:/var/lib/mysql

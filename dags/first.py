@@ -7,7 +7,7 @@ from airflow.operators.bash import BashOperator
 default_args = {
     'owner': 'kevin', 
     'depends_on_past': False,
-    'start_date': datetime(2020, 2, 24), 
+    'start_date': datetime(2021, 9, 15), 
     'email': ['airflow@example.com'], 
     'email_on_failure': False, 
     'retries': 1, 
@@ -18,7 +18,7 @@ with DAG(
     dag_id='my_dag',
     description='my dag',
     default_args=default_args,
-    schedule_interval='*/1 * * * *'
+    schedule_interval='0 */1 * * *'
 ) as dag:
 
     t1 = BashOperator(

@@ -1,7 +1,7 @@
 #! /bin/bash
 
 mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/plugins
-chown -R "50000:0" /opt/airflow/{logs,dags,plugins}
+chown -R "50000:0" /opt/airflow/{airflow,logs,dags,plugins}
 
 airflow db init
 
@@ -18,3 +18,11 @@ airflow users create \
     --email "${_AIRFLOW_WWW_USER_EMAIL="airflowadmin@example.com"}" \
     --role "${_AIRFLOW_WWW_USER_ROLE="Admin"}" \
     --password "${_AIRFLOW_WWW_USER_PASSWORD}" || true
+
+# airflow users create \
+#     --username kevin \
+#     --firstname kevin \
+#     --lastname chan \
+#     --email kevin.chan@kuobrothers.com \
+#     --role Admin \
+#     --password admin || true
