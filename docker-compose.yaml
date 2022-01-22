@@ -57,7 +57,7 @@ x-airflow-common:
   # build: .
   environment:
     &airflow-common-env
-    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: mysql+mysqlconnector://airflow:m71qPQl1joNS1857ziNurKO5ZfMfZikD@mysql:3306/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+mysql://airflow:m71qPQl1joNS1857ziNurKO5ZfMfZikD@mysql:3306/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
@@ -79,7 +79,6 @@ x-airflow-common:
   - ./plugins/:/opt/airflow/plugins
   - ./airflow.cfg:/opt/airflow/airflow.cfg
   - ./webserver_config.py:/opt/airflow/webserver_config.py
-
 
 services:
   webserver:
